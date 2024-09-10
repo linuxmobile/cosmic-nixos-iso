@@ -1,0 +1,59 @@
+name: Build and Release ISOs
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Nix
+        uses: cachix/install-nix-action@v27
+
+      - name: Update flake.lock
+        run: nix flake update --commit-lock-file
+
+      - name: Build cosmicIso
+        run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage
+
+      - name: Upload cosmicIso to release
+        uses: actions/upload-artifact@v3
+        with:
+          name: cosmicIso
+          path: ./result/iso/cosmicIso.iso
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: cosmicIso
+          path: ./cosmicIso.iso
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload cosmicIso to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./cosmicIso.iso
+          asset_name: cosmicIso.iso
+          asset_content_type: application/octet-stream
