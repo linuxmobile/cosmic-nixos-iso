@@ -16,10 +16,10 @@ jobs:
         uses: cachix/install-nix-action@v27
 
       - name: Update flake.lock
-        run: nix flake update --commit-lock-file
+        run: nix flake update --commit-lock-file --accept-flake-config
 
       - name: Build cosmicIso
-        run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage
+        run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
 
       - name: Upload cosmicIso to release
         uses: actions/upload-artifact@v3
@@ -41,7 +41,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
@@ -51,9 +51,9 @@ jobs:
       - name: Upload cosmicIso to release
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./cosmicIso.iso
           asset_name: cosmicIso.iso
-          asset_content_type: application/octet-stream
+          asset_content_type: application/octet-
