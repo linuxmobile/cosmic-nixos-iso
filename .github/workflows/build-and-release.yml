@@ -3,7 +3,7 @@ name: Build and Release ISOs
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
 
 jobs:
@@ -19,13 +19,18 @@ jobs:
         run: nix flake update --commit-lock-file --accept-flake-config
 
       - name: Build cosmicIso
+        id: build_cosmicIso
         run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
+
+      - name: Get build output path
+        id: get_output_path
+        run: echo "ISO_PATH=$(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)" >> $GITHUB_ENV
 
       - name: Upload cosmicIso to release
         uses: actions/upload-artifact@v3
         with:
           name: cosmicIso
-          path: ./result/iso/cosmicIso.iso
+          path: ${{ env.ISO_PATH }}
 
   release:
     needs: build
@@ -41,7 +46,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
@@ -51,9 +56,9 @@ jobs:
       - name: Upload cosmicIso to release
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./cosmicIso.iso
           asset_name: cosmicIso.iso
-          asset_content_type: application/octet-
+          asset_content_type: application/octet-stream
