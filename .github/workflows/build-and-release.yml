@@ -70,4 +70,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./cosmicIso.iso
           asset_name: cosmicIso.iso
-          asset_content_type: application/octet-
+          asset_content_type: application/octet-stream
