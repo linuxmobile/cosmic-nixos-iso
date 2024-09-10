@@ -19,13 +19,18 @@ jobs:
         run: nix flake update --commit-lock-file --accept-flake-config
 
       - name: Build cosmicIso
+        id: build_cosmicIso
         run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
+
+      - name: Get build output path
+        id: get_output_path
+        run: echo "ISO_PATH=$(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)/iso/cosmicIso.iso" >> $GITHUB_ENV
 
       - name: Upload cosmicIso to release
         uses: actions/upload-artifact@v3
         with:
           name: cosmicIso
-          path: ./result/iso/cosmicIso.iso
+          path: ${{ env.ISO_PATH }}
 
   release:
     needs: build
