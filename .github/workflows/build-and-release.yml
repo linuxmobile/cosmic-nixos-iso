@@ -27,7 +27,24 @@ jobs:
         id: build_cosmicIso
         run: |
           nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
-          echo "ISO_PATH=$(readlink -f result/iso/*.iso)" >> $GITHUB_ENV
+          if [ $? -ne 0 ]; then
+            echo "Build failed"
+            exit 1
+          fi
+          echo "Build completed successfully"
+
+          # Find the ISO file
+          ISO_PATH=$(find result -name "*.iso" -type f)
+          if [ -z "$ISO_PATH" ]; then
+            echo "No ISO file found in the result directory"
+            exit 1
+          fi
+          echo "ISO file found at: $ISO_PATH"
+          echo "ISO_PATH=$ISO_PATH" >> $GITHUB_ENV
+
+          # Print directory contents for debugging
+          echo "Contents of result directory:"
+          ls -R result
 
       - name: Generate tag
         id: generate_tag
@@ -55,7 +72,7 @@ jobs:
             exit
           EOF
 
-          echo "Uploading ISO file..."
+          echo "Uploading ISO file from: ${{ env.ISO_PATH }}"
           sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net:/home/frs/project/linuxmobileroms/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso
 
           sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net create << EOF
