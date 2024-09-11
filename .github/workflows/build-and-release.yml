@@ -27,6 +27,9 @@ jobs:
         id: build_cosmicIso
         run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
 
+      - name: List build output directory
+        run: ls -R $(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)
+
       - name: Get build output path
         id: get_output_path
         run: echo "ISO_PATH=$(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)/iso/cosmicIso.iso" >> $GITHUB_ENV
