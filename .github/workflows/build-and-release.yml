@@ -2,12 +2,12 @@ name: Build and Release ISOs
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,34 +29,14 @@ jobs:
           nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
           echo "ISO_PATH=$(readlink -f result/iso/*.iso)" >> $GITHUB_ENV
 
-      - name: Upload cosmicIso to artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: cosmicIso
-          path: ${{ env.ISO_PATH }}
+      - name: Generate tag
+        id: generate_tag
+        run: echo "NEW_TAG=v$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: cosmicIso
-
-      - name: Debug - Print GITHUB_REF
-        run: echo "GITHUB_REF is $GITHUB_REF"
-
-      - name: Extract tag name
-        id: extract_tag
+      - name: Create and push tag
         run: |
-          echo "GITHUB_REF before extraction: $GITHUB_REF"
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "TAG_NAME after extraction: $TAG_NAME"
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
-
-      - name: Debug - Print extracted TAG_NAME
-        run: echo "Extracted TAG_NAME is ${{ env.TAG_NAME }}"
+          git tag ${{ env.NEW_TAG }}
+          git push origin ${{ env.NEW_TAG }}
 
       - name: Create Release
         id: create_release
@@ -64,8 +44,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          release_name: Release ${{ env.TAG_NAME }}
+          tag_name: ${{ env.NEW_TAG }}
+          release_name: Release ${{ env.NEW_TAG }}
           draft: false
           prerelease: false
 
@@ -75,6 +55,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./*.iso
+          asset_path: ${{ env.ISO_PATH }}
           asset_name: cosmicIso.iso
           asset_content_type: application/octet-stream
