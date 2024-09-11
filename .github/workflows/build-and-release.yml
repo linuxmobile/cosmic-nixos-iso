@@ -47,21 +47,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass
 
-          # List contents of the project directory
-          echo "Listing project directory:"
-          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net ls -l /home/frs/project/linuxmobileroms
+          # Create directory and upload ISO in a single SSH session
+          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net create << EOF
+            mkdir -p /home/frs/project/linuxmobileroms/cosmic-nixos
+            exit
+          EOF
 
-          # Create a cosmic-nixos directory if it doesn't exist
-          echo "Creating cosmic-nixos directory:"
-          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net mkdir -p /home/frs/project/linuxmobileroms/cosmic-nixos
-
-          # Upload the ISO file
-          echo "Uploading ISO file:"
+          # Upload the ISO file using scp
           sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net:/home/frs/project/linuxmobileroms/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso
 
-          # Verify the upload
-          echo "Verifying upload:"
-          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net ls -l /home/frs/project/linuxmobileroms/cosmic-nixos
+          # Verify the upload in a single SSH session
+          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net create << EOF
+            ls -l /home/frs/project/linuxmobileroms/cosmic-nixos
+            exit
+          EOF
 
       - name: Create Release
         id: create_release
