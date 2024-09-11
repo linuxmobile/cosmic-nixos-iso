@@ -1,4 +1,4 @@
-{ pkgs, lib, modulesPath, config, ... }:
+{ pkgs, lib, modulesPath, ... }:
 
 let
   zed-fhs = pkgs.buildFHSUserEnv {
@@ -6,17 +6,6 @@ let
     targetPkgs = pkgs: with pkgs; [ zed-editor ];
     runScript = "zed";
   };
-
-  zedNodeFixScript = pkgs.writeShellScriptBin "zedNodeFixScript" ''
-    nodeVersion="node-v${pkgs.nodejs.version}-linux-x64"
-    zedNodePath="${config.xdg.dataHome}/zed/node/$nodeVersion"
-
-    # Eliminar la versión de node descargada por zed-editor
-    rm -rf $zedNodePath
-
-    # Crear el enlace simbólico a la versión de node de nixpkgs
-    ln -sfn ${pkgs.nodejs} $zedNodePath
-  '';
 
 in {
   imports = [
@@ -36,7 +25,6 @@ in {
     zed-fhs
     nodejs
     nixd
-    zedNodeFixScript
   ];
 
   hardware.pulseaudio.enable = lib.mkForce false; # Pipewire complains if not force disabled.
