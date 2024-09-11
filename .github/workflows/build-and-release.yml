@@ -31,7 +31,7 @@ jobs:
 
       - name: Generate tag
         id: generate_tag
-        run: echo "NEW_TAG=v$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+        run: echo "NEW_TAG=v$(date +'%Y.%m.%d')-${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Create and push tag
         run: |
