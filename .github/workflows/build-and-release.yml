@@ -25,16 +25,11 @@ jobs:
 
       - name: Build cosmicIso
         id: build_cosmicIso
-        run: nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
+        run: |
+          nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso.config.system.build.isoImage --accept-flake-config
+          echo "ISO_PATH=$(readlink -f result/iso/*.iso)" >> $GITHUB_ENV
 
-      - name: List build output directory
-        run: ls -R $(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)
-
-      - name: Get build output path
-        id: get_output_path
-        run: echo "ISO_PATH=$(nix path-info .#nixosConfigurations.cosmicIso.config.system.build.isoImage)/iso/cosmicIso.iso" >> $GITHUB_ENV
-
-      - name: Upload cosmicIso to release
+      - name: Upload cosmicIso to artifacts
         uses: actions/upload-artifact@v3
         with:
           name: cosmicIso
@@ -48,7 +43,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: cosmicIso
-          path: ./cosmicIso.iso
 
       - name: Extract tag name
         id: extract_tag
@@ -58,7 +52,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           tag_name: ${{ env.TAG_NAME }}
           release_name: Release ${{ env.TAG_NAME }}
@@ -68,9 +62,9 @@ jobs:
       - name: Upload cosmicIso to release
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cosmicIso.iso
+          asset_path: ./*.iso
           asset_name: cosmicIso.iso
           asset_content_type: application/octet-stream
