@@ -33,18 +33,44 @@ jobs:
           fi
           echo "Build completed successfully"
 
-          # Find the ISO file
-          ISO_PATH=$(find result -name "*.iso" -type f)
+          # Install fd and ripgrep
+          sudo apt-get update
+          sudo apt-get install -y fd-find ripgrep
+
+          # Print directory contents for debugging
+          echo "Contents of result directory:"
+          ls -R result
+
+          # Use fd to find .iso files
+          echo "Searching for .iso files with fd:"
+          fd -e iso . result
+
+          # Use ripgrep to search for files containing "iso" in the name
+          echo "Searching for files containing 'iso' in the name with ripgrep:"
+          rg -l "iso" result
+
+          # If no .iso files, look for other relevant files
+          if [ -z "$(fd -e iso . result)" ]; then
+            echo "No .iso files found. Searching for other relevant files:"
+            fd -e img -e qcow2 -e raw . result
+          fi
+
+          # Check if there's a symlink in the result directory
+          if [ -L result ]; then
+            echo "result is a symlink. Following to:"
+            readlink -f result
+            echo "Contents of symlink target:"
+            ls -R $(readlink -f result)
+          fi
+
+          # Attempt to find the ISO file again
+          ISO_PATH=$(fd -e iso . result | head -n 1)
           if [ -z "$ISO_PATH" ]; then
             echo "No ISO file found in the result directory"
             exit 1
           fi
           echo "ISO file found at: $ISO_PATH"
           echo "ISO_PATH=$ISO_PATH" >> $GITHUB_ENV
-
-          # Print directory contents for debugging
-          echo "Contents of result directory:"
-          ls -R result
 
       - name: Generate tag
         id: generate_tag
