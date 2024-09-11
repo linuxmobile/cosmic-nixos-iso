@@ -85,6 +85,6 @@ jobs:
           tag_name: ${{ env.NEW_TAG }}
           release_name: Release ${{ env.NEW_TAG }}
           body: |
-            ISO download link: https://sourceforge.net/projects/linuxmobileroms/files/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso/download
+            ISO download link: https://sourceforge.net/projects/linuxmobileroms/files/cosmicIso-${{ env.NEW_TAG }}.iso/download
           draft: false
           prerelease: false
