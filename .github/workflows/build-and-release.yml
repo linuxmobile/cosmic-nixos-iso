@@ -36,6 +36,7 @@ jobs:
           ISO_PATH=$(find result -name "*.iso" -type f)
           if [ -z "$ISO_PATH" ]; then
             echo "No ISO file found in the result directory"
+            ls -R result
             exit 1
           fi
           echo "ISO file found at: $ISO_PATH"
