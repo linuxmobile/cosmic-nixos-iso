@@ -26,7 +26,7 @@ jobs:
       - name: Build cosmicIso
         id: build_cosmicIso
         run: |
-          nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIsoEdge.config.system.build.isoImage --accept-flake-config
+          nix --experimental-features 'nix-command flakes' build .#nixosConfigurations.cosmicIso-edge.config.system.build.isoImage --accept-flake-config
           if [ $? -ne 0 ]; then
             echo "Build failed"
             exit 1
