@@ -38,6 +38,19 @@ jobs:
           git tag ${{ env.NEW_TAG }}
           git push origin ${{ env.NEW_TAG }}
 
+      - name: Upload ISO to SourceForge
+        env:
+          SOURCEFORGE_USERNAME: ${{ secrets.SOURCEFORGE_USERNAME }}
+          SOURCEFORGE_API_KEY: ${{ secrets.SOURCEFORGE_API_KEY }}
+          SOURCEFORGE_PROJECT: ${{ secrets.SOURCEFORGE_PROJECT }}
+        run: |
+          # Install sshpass
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+          # Upload the ISO file
+          sshpass -p "$SOURCEFORGE_API_KEY" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME@frs.sourceforge.net:/home/frs/project/$SOURCEFORGE_PROJECT/cosmicIso-${{ env.NEW_TAG }}.iso
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -46,15 +59,7 @@ jobs:
         with:
           tag_name: ${{ env.NEW_TAG }}
           release_name: Release ${{ env.NEW_TAG }}
+          body: |
+            ISO download link: https://sourceforge.net/projects/${{ secrets.SOURCEFORGE_PROJECT }}/files/cosmicIso-${{ env.NEW_TAG }}.iso/download
           draft: false
           prerelease: false
-
-      - name: Upload cosmicIso to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.ISO_PATH }}
-          asset_name: cosmicIso.iso
-          asset_content_type: application/octet-stream
