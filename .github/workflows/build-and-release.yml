@@ -33,9 +33,9 @@ jobs:
           fi
           echo "Build completed successfully"
 
-          ISO_PATH=$(find result -name "*.iso" -type f)
+          ISO_PATH=$(find result/iso -name "*.iso" -type f)
           if [ -z "$ISO_PATH" ]; then
-            echo "No ISO file found in the result directory"
+            echo "No ISO file found in the result/iso directory"
             ls -R result
             exit 1
           fi
