@@ -47,17 +47,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass
 
-          # Create directory and upload ISO in a single SSH session
+          # Create directory, upload ISO, and verify in a single SSH session
           sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net create << EOF
+            set -e
             mkdir -p /home/frs/project/linuxmobileroms/cosmic-nixos
+            echo "Directory created or already exists"
             exit
           EOF
 
-          # Upload the ISO file using scp
+          echo "Uploading ISO file..."
           sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net:/home/frs/project/linuxmobileroms/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso
 
-          # Verify the upload in a single SSH session
           sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net create << EOF
+            set -e
+            echo "Verifying upload:"
             ls -l /home/frs/project/linuxmobileroms/cosmic-nixos
             exit
           EOF
