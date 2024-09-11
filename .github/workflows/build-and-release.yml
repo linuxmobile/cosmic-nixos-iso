@@ -41,7 +41,7 @@ jobs:
       - name: Upload ISO to SourceForge
         env:
           SOURCEFORGE_USERNAME: ${{ secrets.SOURCEFORGE_USERNAME }}
-          SOURCEFORGE_API_KEY: ${{ secrets.SOURCEFORGE_API_KEY }}
+          SOURCEFORGE_PASSWORD: ${{ secrets.SOURCEFORGE_PASSWORD }}
           SOURCEFORGE_PROJECT: ${{ secrets.SOURCEFORGE_PROJECT }}
         run: |
           # Install sshpass
@@ -49,7 +49,7 @@ jobs:
           sudo apt-get install -y sshpass
 
           # Upload the ISO file
-          sshpass -p "$SOURCEFORGE_API_KEY" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME@frs.sourceforge.net:/home/frs/project/$SOURCEFORGE_PROJECT/cosmicIso-${{ env.NEW_TAG }}.iso
+          sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME@frs.sourceforge.net:/home/frs/project/$SOURCEFORGE_PROJECT/cosmicIso-${{ env.NEW_TAG }}.iso
 
       - name: Create Release
         id: create_release
