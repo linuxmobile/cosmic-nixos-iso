@@ -42,14 +42,26 @@ jobs:
         env:
           SOURCEFORGE_USERNAME: ${{ secrets.SOURCEFORGE_USERNAME }}
           SOURCEFORGE_PASSWORD: ${{ secrets.SOURCEFORGE_PASSWORD }}
-          SOURCEFORGE_PROJECT: ${{ secrets.SOURCEFORGE_PROJECT }}
         run: |
           # Install sshpass
           sudo apt-get update
           sudo apt-get install -y sshpass
 
+          # List contents of the project directory
+          echo "Listing project directory:"
+          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net ls -l /home/frs/project/linuxmobileroms
+
+          # Create a cosmic-nixos directory if it doesn't exist
+          echo "Creating cosmic-nixos directory:"
+          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net mkdir -p /home/frs/project/linuxmobileroms/cosmic-nixos
+
           # Upload the ISO file
-          sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME@frs.sourceforge.net:/home/frs/project/$SOURCEFORGE_PROJECT/cosmicIso-${{ env.NEW_TAG }}.iso
+          echo "Uploading ISO file:"
+          sshpass -p "$SOURCEFORGE_PASSWORD" scp -o StrictHostKeyChecking=no ${{ env.ISO_PATH }} $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net:/home/frs/project/linuxmobileroms/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso
+
+          # Verify the upload
+          echo "Verifying upload:"
+          sshpass -p "$SOURCEFORGE_PASSWORD" ssh -o StrictHostKeyChecking=no $SOURCEFORGE_USERNAME,linuxmobileroms@shell.sourceforge.net ls -l /home/frs/project/linuxmobileroms/cosmic-nixos
 
       - name: Create Release
         id: create_release
@@ -60,6 +72,6 @@ jobs:
           tag_name: ${{ env.NEW_TAG }}
           release_name: Release ${{ env.NEW_TAG }}
           body: |
-            ISO download link: https://sourceforge.net/projects/${{ secrets.SOURCEFORGE_PROJECT }}/files/cosmicIso-${{ env.NEW_TAG }}.iso/download
+            ISO download link: https://sourceforge.net/projects/linuxmobileroms/files/cosmic-nixos/cosmicIso-${{ env.NEW_TAG }}.iso/download
           draft: false
           prerelease: false
